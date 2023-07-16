@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:latest
+    hostname: npm.dockerlocal
+    restart: unless-stopped
+    ports:
+      # Public HTTP Port:
+      - '80:80'
+      # Public HTTPS Port:
+      - '443:443'
+      # Admin Web Port:
+      # Comment next line after setting a DNS Entry for the Admin UI, see: https://github.com/NginxProxyManager/nginx-proxy-manager/issues/182
+      - '81:81'
+    volumes:
+      - data-npm:/data
+      - letsencrypt:/etc/letsencrypt
+    healthcheck:
+      test: ["CMD", "/bin/check-health"]
+      interval: 10s
+      timeout: 3s
+    networks:
+      - web-proxy
+volumes:
+  data-npm:
+  letsencrypt:
+
+networks:
+  web-proxy:

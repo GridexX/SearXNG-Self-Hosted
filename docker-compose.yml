@@ -1,0 +1,55 @@
+version: '3'
+
+services:
+  redis:
+    container_name: redis-searxng
+    image: redis:6.0.20-alpine
+    command: redis-server --save "" --appendonly "no"
+    restart: unless-stopped
+    tmpfs:
+      - /var/lib/redis
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    # expose:
+    #   - 6379:6379
+    networks:
+      - searxng
+
+  searxng:
+    container_name: searxng
+    image: searxng/searxng:latest
+    hostname: searxng.dockerlocal
+    restart: unless-stopped
+    # expose:
+    #   - "80:8080"
+    volumes:
+      - ./searxng:/etc/searxng:rw
+    environment:
+      - SEARXNG_HOSTNAME= #Write your Domain name here
+      - SEARXNG_BASE_URL=https://${SEARXNG_HOSTNAME:-localhost}/
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
+    networks:
+      # - nginx-proxy-manager_web-proxy
+      - searxng
+
+networks:
+  searxng:
+    ipam:
+      driver: default
+  # nginx-proxy-manager_web-proxy: # If you want to use Nginx Proxy Manager network
+  #   external: true
